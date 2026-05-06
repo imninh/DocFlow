@@ -1,0 +1,23 @@
+# Maven
+target/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Env
+.env
+
+# Uploads runtime
+uploads/
+
+# Build scripts output (nếu có)
+*.class

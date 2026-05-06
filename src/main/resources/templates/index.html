@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocFlow</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="app-shell" th:if="${currentUser == null}">
+    <main class="login-layout">
+        <section class="login-panel">
+            <div class="brand-lockup">
+                <span class="brand-mark">DF</span>
+                <div>
+                    <h1>DocFlow</h1>
+                    <p>Student Report Submission and Review System</p>
+                </div>
+            </div>
+
+            <div class="message error" th:if="${message}" th:text="${message}">Invalid username or password.</div>
+
+            <div class="section-intro">
+                <h2>Sign in to continue</h2>
+                <p>Enter your class code, username, and password to open the correct workspace.</p>
+            </div>
+
+            <form class="stack-form" th:action="@{/login}" th:object="${loginForm}" method="post">
+                <label>
+                    Class code
+                    <input th:field="*{classCode}" type="text" placeholder="ET4430E-K68">
+                </label>
+                <label>
+                    Username
+                    <input th:field="*{username}" type="text" placeholder="ninh">
+                </label>
+                <label>
+                    Password
+                    <input th:field="*{password}" type="password" placeholder="ninh123">
+                </label>
+                <button class="primary-btn full-width" type="submit">Sign in</button>
+            </form>
+        </section>
+
+        <aside class="account-panel">
+            <div class="section-intro">
+                <h2>How access works</h2>
+                <p>Users sign in with username, password, and class code. The system opens the correct workspace based on the account role and class assignment.</p>
+            </div>
+            <ul class="task-list">
+                <li>Students submit reports to a chosen instructor from the same class.</li>
+                <li>Instructors can open uploaded files, review content, and send decisions.</li>
+                <li>Admins monitor users and reports across the system.</li>
+            </ul>
+        </aside>
+    </main>
+</div>
+
+<div class="app-shell" th:if="${currentUser != null}">
+    <header class="app-header">
+        <div class="brand-lockup">
+            <span class="brand-mark">DF</span>
+            <div>
+                <h1>DocFlow</h1>
+                <p th:text="${currentUser.role} + ' workspace'">student workspace</p>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <div class="current-user">
+                <strong th:text="${currentUser.fullName}">Tran The Ninh</strong>
+                <span th:text="${currentUser.email}">ninh@student.local</span>
+            </div>
+            <form th:action="@{/logout}" method="post">
+                <button class="secondary-btn" type="submit">Sign out</button>
+            </form>
+        </div>
+    </header>
+
+    <main class="dashboard-layout">
+        <aside class="dashboard-sidebar">
+            <section class="sidebar-card">
+                <div class="section-intro compact">
+                    <h2>What to do</h2>
+                </div>
+                <ul class="task-list" th:if="${currentUser.role == 'student'}">
+                    <li>Submit a report with file name and references.</li>
+                    <li>Check status updates and feedback from instructors.</li>
+                    <li>Use the history list to track revisions.</li>
+                </ul>
+                <ul class="task-list" th:if="${currentUser.role == 'instructor'}">
+                    <li>Open a report from the pending queue.</li>
+                    <li>Write feedback and approve or reject it.</li>
+                    <li>Track approval and rejection rates.</li>
+                </ul>
+                <ul class="task-list" th:if="${currentUser.role == 'admin'}">
+                    <li>Monitor user accounts and report traffic.</li>
+                    <li>Check open reports across the system.</li>
+                    <li>Use this view for overview, not editing.</li>
+                </ul>
+            </section>
+
+            <section class="sidebar-card">
+                <div class="card-head">
+                    <h3>Notifications</h3>
+                    <span class="count-pill" th:text="${notifications.size()}">0</span>
+                </div>
+                <div class="message success" th:if="${message}" th:text="${message}">Saved</div>
+                <ul class="notification-feed">
+                    <li th:each="notification : ${notifications}" th:text="${notification.message}">Notification</li>
+                </ul>
+            </section>
+        </aside>
+
+        <section class="dashboard-main">
+            <div class="summary-grid">
+                <article class="summary-card" th:each="card : ${summaryCards}">
+                    <strong th:text="${card.value}">4</strong>
+                    <span th:text="${card.label}">My reports</span>
+                </article>
+            </div>
+
+            <section class="workspace-card" th:if="${currentUser.role == 'student'}">
+                <div class="card-head">
+                    <div>
+                        <h2>Submit report</h2>
+                        <p>Create a new submission for your assigned instructor.</p>
+                    </div>
+                </div>
+                <div class="student-grid">
+                    <form class="stack-form" th:action="@{/student/submit}" th:object="${submissionForm}" method="post" enctype="multipart/form-data">
+                        <label>
+                            Report title
+                            <input th:field="*{title}" type="text">
+                        </label>
+                        <label>
+                            Choose instructor
+                            <select th:field="*{instructorId}">
+                                <option value="">Select instructor</option>
+                                <option th:each="instructor : ${availableInstructors}"
+                                        th:value="${instructor.userId}"
+                                        th:text="${instructor.fullName + ' (' + instructor.classCode + ')'}">
+                                    Dr. Doan Ngoc Linh
+                                </option>
+                            </select>
+                        </label>
+                        <label>
+                            Upload file
+                            <input th:field="*{reportFile}" type="file">
+                        </label>
+                        <label>
+                            References
+                            <textarea th:field="*{referencesText}" rows="5"></textarea>
+                        </label>
+                        <button class="primary-btn" type="submit">Submit report</button>
+                    </form>
+
+                    <div class="list-card">
+                        <div class="card-head">
+                            <h3>My report history</h3>
+                            <span class="count-pill" th:text="${studentReports.size()}">0</span>
+                        </div>
+                        <div class="timeline-list">
+                            <article class="timeline-row" th:each="report : ${studentReports}">
+                                <div>
+                                    <strong th:text="${report.title}">Weekly Report v1</strong>
+                                    <p th:text="${report.latestFeedback}">Feedback</p>
+                                    <small th:text="${'Instructor: ' + report.instructorName}">Instructor: Dr. Doan Ngoc Linh</small>
+                                </div>
+                                <div class="timeline-meta">
+                                    <span class="role-badge" th:text="${report.status}">approved</span>
+                                    <small th:text="${#temporals.format(report.submittedAt, 'dd MMM yyyy HH:mm')}">06 May 2026 10:00</small>
+                                    <a class="text-link" th:href="@{/reports/file(reportId=${report.reportId})}" target="_blank">Open file</a>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="workspace-card" th:if="${currentUser.role == 'instructor'}">
+                <div class="card-head">
+                    <div>
+                        <h2>Review queue</h2>
+                        <p>Review pending work on the left and keep track of completed decisions below.</p>
+                    </div>
+                </div>
+                <div class="review-grid">
+                    <div class="list-card dark-surface">
+                        <div class="card-head">
+                            <h3>Pending reports</h3>
+                            <span class="count-pill inverse" th:text="${instructorQueue.size()}">0</span>
+                        </div>
+                        <div class="queue-list">
+                            <a class="queue-card" th:each="report : ${instructorQueue}"
+                               th:classappend="${selectedReport != null and selectedReport.reportId == report.reportId} ? ' is-selected'"
+                               th:href="@{/instructor/select(reportId=${report.reportId})}">
+                                <strong th:text="${report.title}">Weekly Report v2</strong>
+                                <p th:text="${report.studentName}">Student</p>
+                                <small th:text="${#temporals.format(report.submittedAt, 'dd MMM yyyy')}">06 May 2026</small>
+                                <span class="text-link">Open review</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <form class="stack-form workspace-subcard" th:action="@{/instructor/review}" th:object="${reviewForm}" method="post">
+                        <input th:field="*{reportId}" type="hidden">
+                        <div class="card-head">
+                            <div>
+                                <h3>Selected report</h3>
+                                <p th:text="${selectedReport != null ? selectedReport.title : 'Pick a report from the queue'}">Pick a report</p>
+                            </div>
+                        </div>
+                        <div class="selected-report-meta" th:if="${selectedReport != null}">
+                            <span th:text="'Student: ' + ${selectedReport.studentName}">Student: Tran The Ninh</span>
+                            <a class="text-link" th:href="@{/reports/file(reportId=${selectedReport.reportId})}" target="_blank">Open uploaded file</a>
+                        </div>
+                        <label>
+                            Feedback
+                            <textarea th:field="*{feedbackContent}" rows="8"></textarea>
+                        </label>
+                        <div class="inline-actions">
+                            <button class="primary-btn" type="submit" name="decision" value="approved">Approve</button>
+                            <button class="danger-btn" type="submit" name="decision" value="rejected">Reject</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="list-card">
+                    <div class="card-head">
+                        <h3>Recently processed</h3>
+                        <span class="count-pill" th:text="${reviewedReports.size()}">0</span>
+                    </div>
+                    <div class="reviewed-grid" th:if="${!reviewedReports.isEmpty()}">
+                        <article class="reviewed-card" th:each="report : ${reviewedReports}">
+                            <div>
+                                <strong th:text="${report.title}">Weekly Report v2</strong>
+                                <p th:text="${report.studentName}">Tran The Ninh</p>
+                            </div>
+                            <div class="timeline-meta">
+                                <span class="role-badge" th:text="${report.status}">approved</span>
+                                <small th:text="${#temporals.format(report.updatedAt, 'dd MMM yyyy HH:mm')}">06 May 2026 10:00</small>
+                                <a class="text-link" th:href="@{/reports/file(reportId=${report.reportId})}" target="_blank">Open file</a>
+                            </div>
+                        </article>
+                    </div>
+                    <p th:if="${reviewedReports.isEmpty()}">No processed reports yet.</p>
+                </div>
+            </section>
+
+            <section class="workspace-card" th:if="${currentUser.role == 'admin'}">
+                <div class="card-head">
+                    <div>
+                        <h2>System overview</h2>
+                        <p>Monitor users and reports across the application.</p>
+                    </div>
+                </div>
+                <div class="admin-grid">
+                    <div class="list-card">
+                        <div class="card-head">
+                            <h3>Users</h3>
+                            <span class="count-pill" th:text="${allUsers.size()}">0</span>
+                        </div>
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>Email</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="user : ${allUsers}">
+                                <td th:text="${user.fullName}">Tran The Ninh</td>
+                                <td th:text="${user.role}">student</td>
+                                <td th:text="${user.email}">ninh@student.local</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="list-card">
+                        <div class="card-head">
+                            <h3>Reports</h3>
+                            <span class="count-pill" th:text="${allReports.size()}">0</span>
+                        </div>
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Status</th>
+                                <th>Student</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="report : ${allReports}">
+                                <td th:text="${report.title}">Weekly Report v1</td>
+                                <td th:text="${report.status}">approved</td>
+                                <td th:text="${report.studentName}">Tran The Ninh</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </main>
+</div>
+</body>
+</html>
