@@ -38,6 +38,7 @@ public class ReportRepository {
         report.setStudentName(rs.getString("student_name"));
         report.setInstructorName(rs.getString("instructor_name"));
         report.setLatestFeedback(rs.getString("latest_feedback"));
+        report.setStudentClass(rs.getString("student_class"));
         return report;
     };
 
@@ -55,7 +56,7 @@ public class ReportRepository {
     public List<Report> findQueueByInstructorId(Integer instructorId) {
         return jdbcTemplate.query(baseSelect() + """
                 WHERE r.instructor_id = ?
-                  AND r.status IN ('pending', 'under_review', 'rejected')
+                  AND r.status IN ('pending', 'under_review')
                 ORDER BY r.submitted_at DESC
                 """, reportRowMapper, instructorId);
     }
@@ -110,6 +111,18 @@ public class ReportRepository {
                 """, status, reportId);
     }
 
+    public void delete(Integer reportId) {
+        jdbcTemplate.update("DELETE FROM reports WHERE report_id = ?", reportId);
+    }
+
+    public void update(Integer reportId, String title) {
+        jdbcTemplate.update("""
+                UPDATE reports
+                SET title = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE report_id = ?
+                """, title, reportId);
+    }
+
     public long countByInstructorAndStatus(Integer instructorId, String status) {
         Long count = jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM reports
@@ -132,13 +145,14 @@ public class ReportRepository {
                        r.status, r.parent_report_id, r.submitted_at, r.updated_at,
                        s.full_name AS student_name,
                        i.full_name AS instructor_name,
-                       COALESCE((
+                        (
                            SELECT f.content
                            FROM feedbacks f
                            WHERE f.report_id = r.report_id
                            ORDER BY f.created_at DESC
                            LIMIT 1
-                       ), 'No feedback yet.') AS latest_feedback
+                       ) AS latest_feedback,
+                       s.class_code AS student_class
                 FROM reports r
                 JOIN users s ON s.user_id = r.student_id
                 JOIN users i ON i.user_id = r.instructor_id

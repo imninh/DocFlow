@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS references_list (
     report_id INT NOT NULL,
     citation_text TEXT NOT NULL,
     url VARCHAR(500),
+    file_path VARCHAR(500),
+    original_file_name VARCHAR(255),
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_references_report FOREIGN KEY (report_id) REFERENCES reports(report_id)
 );
@@ -38,6 +40,8 @@ CREATE TABLE IF NOT EXISTS feedbacks (
     report_id INT NOT NULL,
     instructor_id INT NOT NULL,
     content TEXT NOT NULL,
+    file_path VARCHAR(500),
+    original_file_name VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_feedbacks_report FOREIGN KEY (report_id) REFERENCES reports(report_id),
     CONSTRAINT fk_feedbacks_instructor FOREIGN KEY (instructor_id) REFERENCES users(user_id)

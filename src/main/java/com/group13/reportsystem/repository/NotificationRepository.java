@@ -45,4 +45,8 @@ public class NotificationRepository {
                 VALUES (?, ?, ?, FALSE, CURRENT_TIMESTAMP)
                 """, userId, reportId, message);
     }
+
+    public void deleteByReportId(Integer reportId) {
+        jdbcTemplate.update("DELETE FROM notifications WHERE report_id = ?", reportId);
+    }
 }

@@ -12,6 +12,7 @@ import com.group13.reportsystem.repository.ReferenceRepository;
 import com.group13.reportsystem.repository.ReportRepository;
 import com.group13.reportsystem.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -28,19 +29,22 @@ public class PortalService {
     private final ReferenceRepository referenceRepository;
     private final FeedbackRepository feedbackRepository;
     private final FileStorageService fileStorageService;
+    private final PasswordEncoder passwordEncoder;
 
     public PortalService(UserRepository userRepository,
                          ReportRepository reportRepository,
                          NotificationRepository notificationRepository,
                          ReferenceRepository referenceRepository,
                          FeedbackRepository feedbackRepository,
-                         FileStorageService fileStorageService) {
+                         FileStorageService fileStorageService,
+                         PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.reportRepository = reportRepository;
         this.notificationRepository = notificationRepository;
         this.referenceRepository = referenceRepository;
         this.feedbackRepository = feedbackRepository;
         this.fileStorageService = fileStorageService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostConstruct
@@ -53,11 +57,14 @@ public class PortalService {
     }
 
     public User authenticate(LoginForm loginForm) {
-        return userRepository.findByCredentials(
+        User user = userRepository.findByUsernameAndClassCode(
                 loginForm.getUsername().trim(),
-                loginForm.getPassword().trim(),
                 loginForm.getClassCode().trim()
         );
+        if (user != null && passwordEncoder.matches(loginForm.getPassword().trim(), user.getPasswordHash())) {
+            return user;
+        }
+        return null;
     }
 
     public User getUserById(Integer userId) {
@@ -66,6 +73,19 @@ public class PortalService {
 
     public Report getReportById(Integer reportId) {
         return reportRepository.findById(reportId);
+    }
+
+    public void markReportUnderReview(User instructor, Integer reportId) {
+        Report report = reportRepository.findById(reportId);
+        if (report == null || instructor == null) {
+            return;
+        }
+        if (!report.getInstructorId().equals(instructor.getUserId())) {
+            return;
+        }
+        if ("pending".equals(report.getStatus())) {
+            reportRepository.updateReview(reportId, "under_review");
+        }
     }
 
     public Map<String, Object> buildLoginView() {
@@ -138,19 +158,53 @@ public class PortalService {
             }
         }
 
+        if (form.getReferenceFiles() != null) {
+            for (org.springframework.web.multipart.MultipartFile refFile : form.getReferenceFiles()) {
+                if (refFile != null && !refFile.isEmpty()) {
+                    String refPath = fileStorageService.store(refFile);
+                    referenceRepository.insertWithFile(reportId, refFile.getOriginalFilename(), refPath, refFile.getOriginalFilename());
+                }
+            }
+        }
+
         notificationRepository.insert(student.getUserId(), reportId, "Your report was submitted successfully.");
         notificationRepository.insert(instructor.getUserId(), reportId, "A new report is waiting for your review.");
     }
 
-    public void reviewReport(User instructor, ReviewForm form) {
+    public void reviewReport(User instructor, ReviewForm form) throws IOException {
         Report report = reportRepository.findById(form.getReportId());
-        if (report == null) {
-            return;
+        if (report == null || !report.getInstructorId().equals(instructor.getUserId())) {
+            throw new IllegalArgumentException("Unauthorized review action.");
         }
         reportRepository.updateReview(report.getReportId(), form.getDecision());
-        feedbackRepository.insert(report.getReportId(), instructor.getUserId(), form.getFeedbackContent().trim());
+        
+        String feedbackFilePath = null;
+        String originalFileName = null;
+        if (form.getFeedbackFile() != null && !form.getFeedbackFile().isEmpty()) {
+            feedbackFilePath = fileStorageService.store(form.getFeedbackFile());
+            originalFileName = StringUtils.cleanPath(form.getFeedbackFile().getOriginalFilename());
+        }
+
+        if (feedbackFilePath != null) {
+            feedbackRepository.insertWithFile(report.getReportId(), instructor.getUserId(), form.getFeedbackContent().trim(), feedbackFilePath, originalFileName);
+        } else {
+            feedbackRepository.insert(report.getReportId(), instructor.getUserId(), form.getFeedbackContent().trim());
+        }
+        
         notificationRepository.insert(report.getStudentId(), report.getReportId(),
                 "Your report \"" + report.getTitle() + "\" was marked as " + form.getDecision() + ".");
+    }
+
+    public void deleteReport(Integer reportId) {
+        referenceRepository.deleteByReportId(reportId);
+        feedbackRepository.deleteByReportId(reportId);
+        notificationRepository.deleteByReportId(reportId);
+        reportRepository.delete(reportId);
+    }
+
+    public void withdrawReview(Integer reportId) {
+        reportRepository.updateReview(reportId, "pending");
+        feedbackRepository.deleteByReportId(reportId);
     }
 
     public boolean canAccessReportFile(User user, Report report) {

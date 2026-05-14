@@ -18,6 +18,7 @@ public class Report {
     private String studentName;
     private String instructorName;
     private String latestFeedback;
+    private String studentClass;
     private List<ReferenceItem> references = new ArrayList<>();
 
     public Report() {
@@ -125,6 +126,14 @@ public class Report {
 
     public void setLatestFeedback(String latestFeedback) {
         this.latestFeedback = latestFeedback;
+    }
+
+    public String getStudentClass() {
+        return studentClass;
+    }
+
+    public void setStudentClass(String studentClass) {
+        this.studentClass = studentClass;
     }
 
     public List<ReferenceItem> getReferences() {

@@ -7,6 +7,8 @@ public class Feedback {
     private Integer reportId;
     private Integer instructorId;
     private String content;
+    private String filePath;
+    private String originalFileName;
     private LocalDateTime createdAt;
 
     public Feedback() {
@@ -50,6 +52,22 @@ public class Feedback {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public String getOriginalFileName() {
+        return originalFileName;
+    }
+
+    public void setOriginalFileName(String originalFileName) {
+        this.originalFileName = originalFileName;
     }
 
     public LocalDateTime getCreatedAt() {

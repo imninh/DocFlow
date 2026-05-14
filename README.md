@@ -90,25 +90,26 @@ These are available for local testing:
 - Student
   - Class code: `ET4430E-K68`
   - Username: `ninh`
-  - Password: `ninh123`
+  - Password: `Ninh!DocFlow_2026`
 - Instructor
   - Class code: `ET4430E-K68`
   - Username: `linh`
-  - Password: `linh123`
+  - Password: `Linh!DocFlow_2026`
 - Admin
   - Class code: `SYSTEM`
   - Username: `mao`
-  - Password: `mao123`
+  - Password: `Mao!DocFlow_2026`
 
 ## Notes
 
 - This version is already JDBC-based, but still optimized for local demonstration with H2.
 - To move to MySQL, update `application.properties` and point Spring Boot to your MySQL schema.
-- Passwords are plain demo values right now for convenience. Before presenting as a more realistic system, replace them with hashed passwords and a proper auth flow.
+- Passwords are stored as `bcrypt` hashes in the database seed, not as plaintext values.
+- Browser warnings such as "password found in a data breach" usually come from weak or reused demo passwords, not from the password being rendered by the page itself.
 
 ## Suggested Next Improvements
 
-- migrate local auth passwords to SHA-256 or bcrypt
+- rotate demo passwords to stronger unique values and add a password-change flow
 - add user registration or admin account management
 - support report status filters and search
 - add downloadable feedback history per report

@@ -2,6 +2,7 @@ package com.group13.reportsystem.model;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.web.multipart.MultipartFile;
 
 public class ReviewForm {
     @NotNull
@@ -12,6 +13,8 @@ public class ReviewForm {
 
     @NotBlank
     private String feedbackContent;
+
+    private MultipartFile feedbackFile;
 
     public Integer getReportId() {
         return reportId;
@@ -35,5 +38,13 @@ public class ReviewForm {
 
     public void setFeedbackContent(String feedbackContent) {
         this.feedbackContent = feedbackContent;
+    }
+
+    public MultipartFile getFeedbackFile() {
+        return feedbackFile;
+    }
+
+    public void setFeedbackFile(MultipartFile feedbackFile) {
+        this.feedbackFile = feedbackFile;
     }
 }

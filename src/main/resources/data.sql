@@ -1,10 +1,10 @@
 MERGE INTO users (user_id, username, password_hash, email, full_name, role, class_code, created_at) KEY(user_id) VALUES
-  (1, 'ninh', 'ninh123', 'ninh@student.local', 'Tran The Ninh', 'student', 'ET4430E-K68', CURRENT_TIMESTAMP),
-  (2, 'anh', 'anh123', 'anh@student.local', 'Pham Minh Anh', 'student', 'ET4430E-K68', CURRENT_TIMESTAMP),
-  (3, 'ha', 'ha123', 'ha@student.local', 'Le Thu Ha', 'student', 'ET4430E-K68', CURRENT_TIMESTAMP),
-  (4, 'linh', 'linh123', 'linh@instructor.local', 'Dr. Doan Ngoc Linh', 'instructor', 'ET4430E-K68', CURRENT_TIMESTAMP),
-  (5, 'bao', 'bao123', 'bao@instructor.local', 'Prof. Nguyen Quoc Bao', 'instructor', 'ET4430E-K68', CURRENT_TIMESTAMP),
-  (6, 'mao', 'mao123', 'mao@admin.local', 'Dao Huu Mao', 'admin', 'SYSTEM', CURRENT_TIMESTAMP);
+  (1, 'ninh', '$2a$10$fBx8eKpLAYafH9d2qqVRcegvzTNwlkIFxOMIFJsR6OoTkbhgEyoea', 'ninh@student.local', 'Tran The Ninh', 'student', 'ET4430E-K68', CURRENT_TIMESTAMP),
+  (2, 'anh', '$2a$10$nk4wJY3jkywldVjXXqU4.uHpxyJLbDuthLnQkpJw7mwij5MpG5eGu', 'anh@student.local', 'Pham Minh Anh', 'student', 'ET4430E-K68', CURRENT_TIMESTAMP),
+  (3, 'ha', '$2a$10$gWbeu3n7aX81N33l7rzzSuUoUQ6uWoiCjfVMlh8PI366.iVICOI9e', 'ha@student.local', 'Le Thu Ha', 'student', 'ET4430E-K68', CURRENT_TIMESTAMP),
+  (4, 'linh', '$2a$10$fJ4nuZmuuG4FMKteRvMQzOnlc3NDl.xaP5uc.NvTSX6xPpFgIH0dq', 'linh@instructor.local', 'Dr. Doan Ngoc Linh', 'instructor', 'ET4430E-K68', CURRENT_TIMESTAMP),
+  (5, 'bao', '$2a$10$DCya51dx84TUg4NGmkRIQu5G4o.iS.yWDKC6upXeb6Gtic991DqJO', 'bao@instructor.local', 'Prof. Nguyen Quoc Bao', 'instructor', 'ET4430E-K68', CURRENT_TIMESTAMP),
+  (6, 'mao', '$2a$10$SKbkDGUP28AK7tHgldoS7O63QwnY.RF8gAEtA6/ltYnD63VLa3oLq', 'mao@admin.local', 'Dao Huu Mao', 'admin', 'SYSTEM', CURRENT_TIMESTAMP);
 
 MERGE INTO reports (report_id, student_id, instructor_id, title, file_path, original_file_name, status, parent_report_id, submitted_at, updated_at) KEY(report_id) VALUES
   (1, 1, 4, 'Weekly Report v1', 'seed/weekly-report-v1.txt', 'weekly-report-v1.txt', 'approved', NULL, DATEADD('DAY', -12, CURRENT_TIMESTAMP), DATEADD('DAY', -12, CURRENT_TIMESTAMP)),

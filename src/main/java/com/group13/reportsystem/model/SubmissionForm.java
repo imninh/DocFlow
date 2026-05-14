@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 public class SubmissionForm {
     @NotBlank
     private String title;
@@ -16,6 +18,8 @@ public class SubmissionForm {
 
     @NotNull
     private MultipartFile reportFile;
+
+    private List<MultipartFile> referenceFiles;
 
     public String getTitle() {
         return title;
@@ -47,5 +51,13 @@ public class SubmissionForm {
 
     public void setReportFile(MultipartFile reportFile) {
         this.reportFile = reportFile;
+    }
+
+    public List<MultipartFile> getReferenceFiles() {
+        return referenceFiles;
+    }
+
+    public void setReferenceFiles(List<MultipartFile> referenceFiles) {
+        this.referenceFiles = referenceFiles;
     }
 }

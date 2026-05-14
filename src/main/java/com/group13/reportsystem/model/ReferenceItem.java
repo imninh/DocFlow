@@ -7,6 +7,8 @@ public class ReferenceItem {
     private Integer reportId;
     private String citationText;
     private String url;
+    private String filePath;
+    private String originalFileName;
     private LocalDateTime addedAt;
 
     public ReferenceItem() {
@@ -50,6 +52,22 @@ public class ReferenceItem {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public String getOriginalFileName() {
+        return originalFileName;
+    }
+
+    public void setOriginalFileName(String originalFileName) {
+        this.originalFileName = originalFileName;
     }
 
     public LocalDateTime getAddedAt() {

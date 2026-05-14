@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DocFlow</title>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
@@ -25,20 +26,22 @@
                 <p>Enter your class code, username, and password to open the correct workspace.</p>
             </div>
 
-            <form class="stack-form" th:action="@{/login}" th:object="${loginForm}" method="post">
+            <form class="stack-form" th:action="@{/login}" th:object="${loginForm}" method="post" autocomplete="on">
                 <label>
                     Class code
-                    <input th:field="*{classCode}" type="text" placeholder="ET4430E-K68">
+                    <input th:field="*{classCode}" type="text" placeholder="Enter class code" autocomplete="organization">
                 </label>
                 <label>
                     Username
-                    <input th:field="*{username}" type="text" placeholder="ninh">
+                    <input th:field="*{username}" type="text" placeholder="Enter username" autocomplete="username">
                 </label>
                 <label>
                     Password
-                    <input th:field="*{password}" type="password" placeholder="ninh123">
+                    <input th:field="*{password}" type="password" placeholder="Enter password" autocomplete="current-password">
                 </label>
-                <button class="primary-btn full-width" type="submit">Sign in</button>
+                <button class="primary-btn full-width" type="submit">
+                    <i class="ph ph-sign-in"></i> Sign in
+                </button>
             </form>
         </section>
 
@@ -72,7 +75,9 @@
                 <span th:text="${currentUser.email}">ninh@student.local</span>
             </div>
             <form th:action="@{/logout}" method="post">
-                <button class="secondary-btn" type="submit">Sign out</button>
+                <button class="secondary-btn" type="submit">
+                    <i class="ph ph-sign-out"></i> Sign out
+                </button>
             </form>
         </div>
     </header>
@@ -150,9 +155,15 @@
                         </label>
                         <label>
                             References
-                            <textarea th:field="*{referencesText}" rows="5"></textarea>
+                            <textarea th:field="*{referencesText}" rows="3" placeholder="Paste citations here..."></textarea>
                         </label>
-                        <button class="primary-btn" type="submit">Submit report</button>
+                        <label>
+                            Upload reference files (Optional)
+                            <input type="file" name="referenceFiles" multiple>
+                        </label>
+                        <button class="primary-btn" type="submit">
+                            <i class="ph ph-paper-plane-right"></i> Submit report
+                        </button>
                     </form>
 
                     <div class="list-card">
@@ -168,9 +179,16 @@
                                     <small th:text="${'Instructor: ' + report.instructorName}">Instructor: Dr. Doan Ngoc Linh</small>
                                 </div>
                                 <div class="timeline-meta">
-                                    <span class="role-badge" th:text="${report.status}">approved</span>
+                                    <span class="role-badge" th:classappend="'badge-' + ${report.status}" th:text="${report.status}">approved</span>
                                     <small th:text="${#temporals.format(report.submittedAt, 'dd MMM yyyy HH:mm')}">06 May 2026 10:00</small>
-                                    <a class="text-link" th:href="@{/reports/file(reportId=${report.reportId})}" target="_blank">Open file</a>
+                                    <div class="action-bar">
+                                        <a class="text-link" th:href="@{/reports/file(reportId=${report.reportId})}" target="_blank">View</a>
+                                        <a class="text-link" th:if="${report.status != 'pending'}" th:href="@{/student/bm03(reportId=${report.reportId})}" style="color: #0d9488;">BM03</a>
+                                        <form th:if="${report.status == 'pending'}" th:action="@{/student/withdraw}" method="post">
+                                            <input type="hidden" name="reportId" th:value="${report.reportId}">
+                                            <button type="submit" class="text-link" style="color: #e11d48;">Withdraw</button>
+                                        </form>
+                                    </div>
                                 </div>
                             </article>
                         </div>
@@ -195,15 +213,19 @@
                             <a class="queue-card" th:each="report : ${instructorQueue}"
                                th:classappend="${selectedReport != null and selectedReport.reportId == report.reportId} ? ' is-selected'"
                                th:href="@{/instructor/select(reportId=${report.reportId})}">
-                                <strong th:text="${report.title}">Weekly Report v2</strong>
-                                <p th:text="${report.studentName}">Student</p>
-                                <small th:text="${#temporals.format(report.submittedAt, 'dd MMM yyyy')}">06 May 2026</small>
-                                <span class="text-link">Open review</span>
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <strong th:text="${report.title}">Weekly Report v2</strong>
+                                    <span class="role-badge" th:classappend="'badge-' + ${report.status}" th:text="${report.status}">pending</span>
+                                </div>
+                                <p th:text="${report.studentName + ' (' + report.studentClass + ')'}">Student (Class)</p>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                                    <small th:text="${#temporals.format(report.submittedAt, 'dd MMM yyyy')}">06 May 2026</small>
+                                </div>
                             </a>
                         </div>
                     </div>
 
-                    <form class="stack-form workspace-subcard" th:action="@{/instructor/review}" th:object="${reviewForm}" method="post">
+                    <form class="stack-form workspace-subcard" th:action="@{/instructor/review}" th:object="${reviewForm}" method="post" enctype="multipart/form-data">
                         <input th:field="*{reportId}" type="hidden">
                         <div class="card-head">
                             <div>
@@ -212,17 +234,38 @@
                             </div>
                         </div>
                         <div class="selected-report-meta" th:if="${selectedReport != null}">
-                            <span th:text="'Student: ' + ${selectedReport.studentName}">Student: Tran The Ninh</span>
-                            <a class="text-link" th:href="@{/reports/file(reportId=${selectedReport.reportId})}" target="_blank">Open uploaded file</a>
+                            <span th:text="'Student: ' + ${selectedReport.studentName} + ' (' + ${selectedReport.studentClass} + ')'">Student: Tran The Ninh (Class)</span>
+                            <a class="text-link" th:href="@{/reports/file(reportId=${selectedReport.reportId})}" target="_blank">Open file</a>
                         </div>
+                        <label th:if="${selectedReport != null}">
+                            Attach feedback file (Optional)
+                            <input th:field="*{feedbackFile}" type="file">
+                        </label>
                         <label>
                             Feedback
-                            <textarea th:field="*{feedbackContent}" rows="8"></textarea>
+                            <textarea th:field="*{feedbackContent}" rows="8" placeholder="Enter your detailed feedback here..."></textarea>
                         </label>
                         <div class="inline-actions">
-                            <button class="primary-btn" type="submit" name="decision" value="approved">Approve</button>
-                            <button class="danger-btn" type="submit" name="decision" value="rejected">Reject</button>
+                            <button class="primary-btn" type="submit" name="decision" value="approved">
+                                <i class="ph ph-check-circle"></i> Approve
+                            </button>
+                            <button class="danger-btn" type="submit" name="decision" value="rejected">
+                                <i class="ph ph-x-circle"></i> Reject
+                            </button>
+                            <button class="secondary-btn"
+                                    th:if="${selectedReport != null and selectedReport.status != 'pending'}"
+                                    type="submit"
+                                    form="withdraw-review-form"
+                                    style="color: #e11d48;">
+                                <i class="ph ph-arrow-counter-clockwise"></i> Retract
+                            </button>
                         </div>
+                    </form>
+                    <form id="withdraw-review-form"
+                          th:if="${selectedReport != null and selectedReport.status != 'pending'}"
+                          th:action="@{/instructor/withdraw}"
+                          method="post">
+                        <input type="hidden" name="reportId" th:value="${selectedReport.reportId}">
                     </form>
                 </div>
                 <div class="list-card">
@@ -231,17 +274,20 @@
                         <span class="count-pill" th:text="${reviewedReports.size()}">0</span>
                     </div>
                     <div class="reviewed-grid" th:if="${!reviewedReports.isEmpty()}">
-                        <article class="reviewed-card" th:each="report : ${reviewedReports}">
+                        <a class="reviewed-card"
+                           th:each="report : ${reviewedReports}"
+                           th:classappend="${selectedReport != null and selectedReport.reportId == report.reportId} ? ' is-selected'"
+                           th:href="@{/instructor/select(reportId=${report.reportId})}">
                             <div>
                                 <strong th:text="${report.title}">Weekly Report v2</strong>
                                 <p th:text="${report.studentName}">Tran The Ninh</p>
                             </div>
                             <div class="timeline-meta">
-                                <span class="role-badge" th:text="${report.status}">approved</span>
+                                <span class="role-badge" th:classappend="'badge-' + ${report.status}" th:text="${report.status}">approved</span>
                                 <small th:text="${#temporals.format(report.updatedAt, 'dd MMM yyyy HH:mm')}">06 May 2026 10:00</small>
-                                <a class="text-link" th:href="@{/reports/file(reportId=${report.reportId})}" target="_blank">Open file</a>
+                                <span class="text-link">Open review</span>
                             </div>
-                        </article>
+                        </a>
                     </div>
                     <p th:if="${reviewedReports.isEmpty()}">No processed reports yet.</p>
                 </div>
@@ -305,5 +351,24 @@
         </section>
     </main>
 </div>
+<script>
+    // Scroll restoration
+    window.addEventListener('scroll', () => {
+        sessionStorage.setItem('scrollPos', window.scrollY);
+    });
+    window.addEventListener('load', () => {
+        const scrollPos = sessionStorage.getItem('scrollPos');
+        if (scrollPos) window.scrollTo(0, parseInt(scrollPos));
+    });
+
+    // Handle "jump" notifications for feedback
+    const message = document.querySelector('.message');
+    if (message && message.textContent.includes('marked as')) {
+        message.style.backgroundColor = '#fff7ed';
+        message.style.borderColor = '#ffedd5';
+        message.style.color = '#c2410c';
+        message.innerHTML = '<i class="ph ph-bell-ringing" style="font-size: 1.4rem;"></i> ' + message.innerHTML;
+    }
+</script>
 </body>
 </html>

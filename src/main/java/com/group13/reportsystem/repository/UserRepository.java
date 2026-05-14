@@ -32,11 +32,11 @@ public class UserRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public User findByCredentials(String username, String password, String classCode) {
+    public User findByUsernameAndClassCode(String username, String classCode) {
         List<User> users = jdbcTemplate.query("""
                 SELECT * FROM users
-                WHERE username = ? AND password_hash = ? AND class_code = ?
-                """, userRowMapper, username, password, classCode);
+                WHERE username = ? AND class_code = ?
+                """, userRowMapper, username, classCode);
         return users.isEmpty() ? null : users.get(0);
     }
 
